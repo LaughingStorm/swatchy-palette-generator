@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="initial-scale=1, width=device-width">
+      <title>Color extractor v0</title>
+   </head>
+<body>
+    <form id="uploadForm">
+        <input type="file" name="image" accept="image/*" required>
+        <input type="number" name="num_of_colors" value="5" min="1" max="12" required>
+        <button type="submit">Extract Colors</button>
+    </form>
+
+    <div id="results">
+        <h3>Custom K-Means Results</h3>
+        <div id="extractor-container"></div>
+
+        <h3>Pylette Results</h3>
+        <div id="pylette-container"></div>
+    </div>
+    <button onclick="handleGenerateClick()">Fetch ASE</button>
+    <script src="/static/script.js"></script>
+    <script>
+    /**
+     * The reusable function logic
+     */
+    async function generateASE(colorArray) {
+    try {
+        const response = await fetch('/api/generate-psd', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ colors: colorArray })
+        });
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'palette.psd';
+        a.click();
+        URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Fetch error:', error);
+    }
+}
+
+    /**
+     * The specific caller function
+     */
+    function handleGenerateClick() {
+        const palette = ['#1f1805', '#a15e3e', '#d0b69a', '#6c290c', '#39657e'];
+        generateASE(palette);
+    }
+</script>>
+</body>
+
+  </html>
+  
