@@ -1,61 +1,194 @@
 <!DOCTYPE html>
-<html lang="en">
-   <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="initial-scale=1, width=device-width">
-      <title>Color extractor v0</title>
-   </head>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Extractor</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap" rel="stylesheet">
+</head>
 <body>
-    <form id="uploadForm">
-        <input type="file" name="image" accept="image/*" required>
-        <input type="number" name="num_of_colors" value="5" min="1" max="12" required>
-        <button type="submit">Extract Colors</button>
-    </form>
 
-    <div id="results">
-        <h3>Custom K-Means Results</h3>
-        <div id="extractor-container"></div>
+  <div class="app">
 
-        <h3>Pylette Results</h3>
-        <div id="pylette-container"></div>
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <span class="app-title">Extractor</span>
+
+      <div class="topbar-center">
+        <div class="method-toggle">
+          <button class="method-btn active" id="btn-pylette">Pylette</button>
+          <button class="method-btn" id="btn-kmeans">K-Means</button>
+        </div>
+
+        <!-- hidden on mobile, shown in palette-bar instead -->
+        <div class="count-control topbar-count-wrap">
+          <span class="toggle-label">Swatches</span>
+          <button class="count-btn" id="btn-count-down">−</button>
+          <span class="count-display" id="swatch-count">5</span>
+          <button class="count-btn" id="btn-count-up">+</button>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="topbar-btn" id="btn-eyedropper">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8"/></svg>
+          <span class="btn-label">Eyedropper</span>
+        </button>
+
+        <div class="topbar-divider"></div>
+
+        <!-- hidden on mobile, shown in palette-bar instead -->
+        <div class="export-dropdown topbar-export-wrap" id="export-dropdown">
+          <button class="export-toggle" id="export-toggle-btn">
+            Export
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="export-menu" id="export-menu">
+            <button class="export-menu-item" id="btn-export-ase">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export .ASE
+            </button>
+            <button class="export-menu-item" id="btn-export-psd">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export .PSD
+            </button>
+            <button class="export-menu-item" id="btn-copy-hex">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy All Hex
+            </button>
+            <button class="export-menu-item" id="btn-copy-css">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              Copy CSS Vars
+            </button>
+          </div>
+        </div>
+
+        <button class="topbar-btn" id="btn-reset">Reset</button>
+        <button class="topbar-btn icon-btn" id="btn-theme" title="Toggle theme">
+          <svg id="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg id="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+        <span class="copy-flash" id="copy-flash">Copied</span>
+      </div>
+    </header>
+
+    <!-- MAIN -->
+    <div class="main">
+
+      <!-- LEFT: image -->
+      <div class="left-panel" id="left-panel">
+        <div class="image-wrap" id="image-wrap">
+          <div class="upload-zone" id="upload-zone">
+            <canvas id="image-canvas"></canvas>
+            <div class="upload-placeholder" id="upload-placeholder">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span>Drop image or click to upload</span>
+              <span class="upload-sub">PNG · JPG · JPEG</span>
+            </div>
+            <input type="file" id="image-upload" accept="image/png, image/jpeg">
+          </div>
+        </div>
+        <div class="image-controls">
+          <label class="image-ctrl-btn">
+            Replace Image
+            <input type="file" id="image-replace" accept="image/png, image/jpeg">
+          </label>
+          <button class="image-ctrl-btn btn-toggle-image">Hide Image</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: palette bar (mobile) + swatches -->
+      <div class="right-panel">
+
+        <!-- palette sub-bar — only visible on mobile -->
+        <div class="palette-bar">
+          <div class="count-control">
+            <button class="count-btn" id="btn-count-down-m">−</button>
+            <span class="count-display" id="swatch-count-m">5</span>
+            <button class="count-btn" id="btn-count-up-m">+</button>
+          </div>
+          <div class="export-dropdown" id="export-dropdown-m">
+            <button class="export-toggle" id="export-toggle-btn-m">
+              Export
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="export-menu" id="export-menu-m">
+              <button class="export-menu-item" id="btn-export-ase-m">Export .ASE</button>
+              <button class="export-menu-item" id="btn-export-psd-m">Export .PSD</button>
+              <button class="export-menu-item" id="btn-copy-hex-m">Copy All Hex</button>
+              <button class="export-menu-item" id="btn-copy-css-m">Copy CSS Vars</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="swatches" id="swatches-container"></div>
+      </div>
+
     </div>
-    <button onclick="handleGenerateClick()">Fetch ASE</button>
-    <script src="/static/script.js"></script>
-    <script>
-    /**
-     * The reusable function logic
-     */
-    async function generateASE(colorArray) {
-    try {
-        const response = await fetch('/api/generate-psd', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ colors: colorArray })
-        });
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'palette.psd';
-        a.click();
-        URL.revokeObjectURL(url);
-    } catch (error) {
-        console.error('Fetch error:', error);
-    }
-}
+  </div>
 
-    /**
-     * The specific caller function
-     */
-    function handleGenerateClick() {
-        const palette = ['#1f1805', '#a15e3e', '#d0b69a', '#6c290c', '#39657e'];
-        generateASE(palette);
-    }
-</script>>
+
+  <!-- COLOR EDITOR MODAL (shown on screens <= 1024px) -->
+  <div class="editor-modal-overlay" id="editor-modal-overlay">
+    <div class="editor-modal" id="editor-modal">
+      <div class="editor-modal-header">
+        <span class="editor-modal-title" id="modal-title">Edit Color</span>
+        <button class="editor-modal-close" id="modal-close">✕</button>
+      </div>
+      <div class="editor-modal-strip" id="modal-strip">
+        <div class="editor-modal-half" id="modal-orig-half">
+          <span class="editor-modal-half-label">Original</span>
+          <span class="swatch-hex" id="modal-orig-hex"></span>
+        </div>
+        <div class="editor-modal-divider"></div>
+        <div class="editor-modal-half" id="modal-new-half">
+          <span class="editor-modal-half-label right">New</span>
+          <span class="swatch-hex" id="modal-new-hex"></span>
+        </div>
+      </div>
+      <div class="editor-modal-body">
+        <div class="sat-bri-picker" id="modal-picker">
+          <canvas class="sat-bri-canvas" id="modal-canvas"></canvas>
+          <div class="sat-bri-marker" id="modal-marker"></div>
+        </div>
+        <div class="slider-group">
+          <div class="slider-row">
+            <span class="slider-label">H</span>
+            <div class="slider-track" id="modal-track-h" style="background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)">
+              <div class="slider-thumb" id="modal-thumb-h"></div>
+            </div>
+            <span class="slider-val" id="modal-val-h">0</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-label">S</span>
+            <div class="slider-track" id="modal-track-s">
+              <div class="slider-thumb" id="modal-thumb-s"></div>
+            </div>
+            <span class="slider-val" id="modal-val-s">0</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-label">B</span>
+            <div class="slider-track" id="modal-track-b">
+              <div class="slider-thumb" id="modal-thumb-b"></div>
+            </div>
+            <span class="slider-val" id="modal-val-b">0</span>
+          </div>
+        </div>
+        <div class="hex-row">
+          <div class="hex-preview" id="modal-hex-preview"></div>
+          <span class="hex-label">Hex</span>
+          <input class="hex-input" id="modal-hex-input" type="text" maxlength="7" spellcheck="false">
+        </div>
+      </div>
+      <div class="editor-modal-actions">
+        <button class="editor-modal-btn" id="modal-btn-reset">Reset</button>
+        <button class="editor-modal-btn apply" id="modal-btn-apply">Apply</button>
+      </div>
+    </div>
+  </div>
+  <script src="/static/js/script.js"></script>
 </body>
-
-  </html>
-  
+</html>

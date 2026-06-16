@@ -23,13 +23,7 @@ def extract_colors_api():
             return jsonify({"message": "Please provide the image file"}), 400
     # Open the image with Pillow
     img = Image.open(file)
-    num_of_colors = request.form.get("num_of_colors")
-    try:
-        num_of_colors = int(num_of_colors)
-        if num_of_colors < 1 or num_of_colors > 12:
-             raise ValueError
-    except (ValueError, TypeError):
-         num_of_colors = 5
+    num_of_colors = 10
 
     #PYLETTE
     palette = extract_colors(image=img, palette_size=num_of_colors, mode ="KMeans")
