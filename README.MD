@@ -2,6 +2,8 @@
 
 A browser-based color palette extraction tool for artists.
 
+**[Live Demo](https://swatchy.up.railway.app/)**
+
 ![Swatchy — main interface](screenshots/main.png)
 ![Swatchy - palette](screenshots/palette.png)
 
