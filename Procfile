@@ -1,1 +1,1 @@
-web: gunicorn app:app
+web: pip install --no-deps pylette && gunicorn app:app
