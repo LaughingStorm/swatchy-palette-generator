@@ -687,13 +687,6 @@ document.getElementById('btn-copy-css').addEventListener('click', () => {
   navigator.clipboard.writeText(dVars).then(flash);
 });
 
-// Reset all edits for the active palette back to originally extracted colors
-document.getElementById('btn-reset').addEventListener('click', () => {
-  state.palettes[state.activeTab] = [...state.originals[state.activeTab]];
-  state.openIndex = -1;
-  renderSwatches();
-});
-
 // Toggle light/dark theme by updating the data-theme attribute on <html>
 document.getElementById('btn-theme').addEventListener('click', () => {
   const html = document.documentElement;
