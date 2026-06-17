@@ -15,20 +15,25 @@
 
     <!-- TOPBAR -->
     <header class="topbar">
-      <span class="app-title">Extractor</span>
+      <span class="app-title">SWATCHY</span>
 
       <div class="topbar-center">
         <div class="method-toggle">
-          <button class="method-btn active" id="btn-pylette">Pylette</button>
-          <button class="method-btn" id="btn-kmeans">K-Means</button>
+          <button class="method-btn active" id="btn-kmeans">Swatchy</button>
+          <button class="method-btn " id="btn-pylette">Pylette</button>
+          
         </div>
 
         <!-- hidden on mobile, shown in palette-bar instead -->
         <div class="count-control topbar-count-wrap">
           <span class="toggle-label">Swatches</span>
-          <button class="count-btn" id="btn-count-down">−</button>
+          <button class="count-btn" id="btn-count-down">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
           <span class="count-display" id="swatch-count">5</span>
-          <button class="count-btn" id="btn-count-up">+</button>
+          <button class="count-btn" id="btn-count-up">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
         </div>
       </div>
 
@@ -106,9 +111,13 @@
         <!-- palette sub-bar — only visible on mobile -->
         <div class="palette-bar">
           <div class="count-control">
-            <button class="count-btn" id="btn-count-down-m">−</button>
+            <button class="count-btn" id="btn-count-down-m">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
             <span class="count-display" id="swatch-count-m">5</span>
-            <button class="count-btn" id="btn-count-up-m">+</button>
+            <button class="count-btn" id="btn-count-up-m">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
           </div>
           <div class="export-dropdown" id="export-dropdown-m">
             <button class="export-toggle" id="export-toggle-btn-m">
@@ -136,7 +145,9 @@
     <div class="editor-modal" id="editor-modal">
       <div class="editor-modal-header">
         <span class="editor-modal-title" id="modal-title">Edit Color</span>
-        <button class="editor-modal-close" id="modal-close">✕</button>
+        <button class="editor-modal-close" id="modal-close">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
       <div class="editor-modal-strip" id="modal-strip">
         <div class="editor-modal-half" id="modal-orig-half">
