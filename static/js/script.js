@@ -202,18 +202,15 @@ function renderSwatches() {
       }
     });
 
-    // Only enable draggable on the row when the drag handle is pressed.
-    // This prevents the browser drag from firing during color picker interactions.
-    strip.addEventListener('mousedown', e => {
-      const btn = e.target.closest('[data-action="drag"]');
-      if (btn) {
-        e.stopPropagation();
-        row.draggable = true;
-      }
-    });
-    strip.addEventListener('mouseup', () => { row.draggable = false; });
+   
 
     row.appendChild(strip);
+    // pointer-based drag for the drag handle
+
+
+    initDrag(row, i);
+
+
 
     // Build the inline editor if this swatch is open (desktop only)
     if (isOpen) {
@@ -221,34 +218,7 @@ function renderSwatches() {
       row.appendChild(editor);
     }
 
-    // ── DRAG TO REORDER ──
-    // HTML5 drag and drop. draggable is toggled on/off via the handle button
-    // to avoid conflicts with the color picker canvas drag.
-    row.addEventListener('dragstart', e => {
-      dragSrcIndex = i;
-      row.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-    });
 
-    row.addEventListener('dragover', e => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      document.querySelectorAll('.swatch-row').forEach(r => r.classList.remove('drag-over'));
-      row.classList.add('drag-over');
-    });
-
-    row.addEventListener('drop', e => {
-      e.preventDefault();
-      if (dragSrcIndex === null || dragSrcIndex === i) return;
-      reorderSwatch(dragSrcIndex, i);
-      dragSrcIndex = null;
-    });
-
-    row.addEventListener('dragend', () => {
-      row.draggable = false;
-      row.classList.remove('dragging');
-      document.querySelectorAll('.swatch-row').forEach(r => r.classList.remove('drag-over'));
-    });
 
     swatchesContainer.appendChild(row);
   }
@@ -531,6 +501,123 @@ window.addEventListener('mouseup', () => {
   isDraggingSlider = false;
   activeSliderType = null;
 });
+
+// ── LIVE REORDER DRAG ─────────────────────────────────────────────────────
+// Replace the pointerdown handler in renderSwatches with this function.
+// Call it after building each row: initDrag(row, i);
+//
+// How it works:
+// 1. pointerdown on drag handle — clone the row, record positions of all rows
+// 2. pointermove — move the clone, calculate shadow order, shift rows with translateY
+// 3. pointerup — commit shadow order to state arrays, re-render once
+
+function initDrag(row, index) {
+  const handle = row.querySelector('[data-action="drag"]');
+  if (!handle) return;
+
+  handle.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Snapshot all rows and their rects before any movement
+    const allRows   = [...swatchesContainer.querySelectorAll('.swatch-row')];
+    const rowCount  = allRows.length;
+    const rects     = allRows.map(r => r.getBoundingClientRect());
+    const rowHeight = rects[0].height; // all rows same height
+    const rowRect   = rects[index];
+
+    // Shadow order tracks where each row "appears" to be during drag
+    // shadowOrder[visualPosition] = originalIndex
+    let shadowOrder = allRows.map((_, i) => i);
+
+    // Create clone that follows the pointer
+    const clone = row.cloneNode(true);
+    clone.style.cssText = `
+      position: fixed;
+      left: ${rowRect.left}px;
+      top: ${rowRect.top}px;
+      width: ${rowRect.width}px;
+      height: ${rowRect.height}px;
+      pointer-events: none;
+      z-index: 999;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      opacity: 0.97;
+      border-radius: 2px;
+    `;
+    document.body.appendChild(clone);
+
+    // Hide the original row in place
+    row.style.opacity = '0';
+    row.style.pointerEvents = 'none';
+
+    const startY = e.clientY;
+    let currentDropIndex = index; // where the dragged item would land
+
+    function onMove(e) {
+      const dy = e.clientY - startY;
+      clone.style.top = (rowRect.top + dy) + 'px';
+
+      // Calculate which visual slot the dragged item is hovering over
+      // based on the center of the clone relative to the container
+      const cloneCenter = rowRect.top + dy + rowHeight / 2;
+      const containerTop = rects[0].top;
+      let newDropIndex = Math.round((cloneCenter - containerTop - rowHeight / 2) / rowHeight);
+      newDropIndex = Math.max(0, Math.min(rowCount - 1, newDropIndex));
+
+      if (newDropIndex === currentDropIndex) return;
+      currentDropIndex = newDropIndex;
+
+      // Rebuild shadow order — remove dragged item, insert at new position
+      shadowOrder = allRows.map((_, i) => i).filter(i => i !== index);
+      shadowOrder.splice(currentDropIndex, 0, index);
+
+      // Apply translateY to each row based on its new shadow position
+      // The dragged row (index) stays hidden, others shift smoothly
+      allRows.forEach((r, originalIdx) => {
+        if (originalIdx === index) return; // skip — using clone
+        const shadowPos = shadowOrder.indexOf(originalIdx);
+        const originalPos = originalIdx; // original visual position
+        const delta = (shadowPos - originalPos) * rowHeight;
+        r.style.transition = 'transform 0.15s ease';
+        r.style.transform  = `translateY(${delta}px)`;
+      });
+    }
+
+    function onUp() {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup',   onUp);
+
+      // Clean up clone and row styles
+      clone.remove();
+      row.style.opacity      = '';
+      row.style.pointerEvents = '';
+      allRows.forEach(r => {
+        r.style.transform  = '';
+        r.style.transition = '';
+      });
+
+      // Commit the shadow order to state arrays
+      if (currentDropIndex !== index) {
+        const pal  = state.palettes[state.activeTab];
+        const orig = state.originals[state.activeTab];
+
+        // Reorder both arrays according to shadowOrder
+        const newPal  = shadowOrder.map(i => pal[i]);
+        const newOrig = shadowOrder.map(i => orig[i]);
+
+        state.palettes[state.activeTab]  = newPal;
+        state.originals[state.activeTab] = newOrig;
+        state.openIndex = -1;
+      }
+
+      renderSwatches();
+    }
+
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup',   onUp);
+  });
+}
+
 
 // ── IMAGE HANDLING ─────────────────────────────────────────────────────────
 

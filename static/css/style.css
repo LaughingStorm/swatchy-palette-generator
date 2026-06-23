@@ -961,6 +961,7 @@ html, body {
 
   .method-btn  { padding: 4px 8px; height: 26px; }
   .topbar-btn  { height: 26px; padding: 0 8px; }
+  .drag-handle { display: none;}
 }
 
 /* Small phone */
