@@ -2,7 +2,7 @@ import tempfile
 import os
 from PIL import Image, ImageDraw
 from psd_tools import PSDImage
-from swatchy import hex_to_rgb
+from ase_writer import hex_to_rgb
 
 
 def write_psd(hex_colors):

@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, send_from_directory, send_file
 from Pylette import extract_colors
 from PIL import Image
 import extractor
-from swatchy import write_ase
+from ase_writer import write_ase
 from psd_writer import write_psd
 from io import BytesIO
 

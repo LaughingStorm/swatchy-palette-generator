@@ -82,7 +82,6 @@ Then open `http://localhost:5000` in your browser.
 swatchy/
 ├── app.py              # Flask routes — extraction, ASE and PSD generation
 ├── extractor.py        # Custom KMeans extraction algorithm
-├── swatchy.py          # Hex/RGB color conversion utilities
 ├── psd_writer.py       # PSD file generation via psd-tools
 ├── ase_writer.py       # ASE binary file writer (custom implementation)
 ├── requirements.txt
